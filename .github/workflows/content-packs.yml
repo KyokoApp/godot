@@ -56,9 +56,11 @@ jobs:
           rc=$?
           set -e
           grep -E "^(ok|FAIL|RESULT)" update-tests.log || true
-          grep -E "SCRIPT ERROR|Parse Error|Compile Error" -A2 update-tests.log | head -60 || true
-          result_line=$(grep RESULT update-tests.log | tail -n 1 || true)
-          echo "::notice title=Update tests::${result_line:-no result}"
+          # Ringkasan hasil + error skrip sebagai anotasi (log lengkap ada di artifact).
+          grep -v -E "fontconfig|get_system_font_path" update-tests.log \
+            | grep -E "^(ok|FAIL|RESULT)|ERROR|SCRIPT|Parse|Compile|at:|res://" | tail -n 120 > test-summary.txt || true
+          msg=$(cat test-summary.txt | tr -d '\r' | sed -e 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+          echo "::notice title=Update test summary::${msg}"
           echo "godot test exit code: $rc"
           exit "$rc"
 
