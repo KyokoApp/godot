@@ -33,10 +33,16 @@ var _http: HTTPRequest
 
 
 func _ready() -> void:
+	_ensure_http()
+	DirAccess.make_dir_recursive_absolute(CONTENT_DIR)
+
+
+func _ensure_http() -> void:
+	if _http != null:
+		return
 	_http = HTTPRequest.new()
 	_http.timeout = REQUEST_TIMEOUT
 	add_child(_http)
-	DirAccess.make_dir_recursive_absolute(CONTENT_DIR)
 
 
 ## Ambil dan validasi manifest. Mengembalikan { ok, manifest, error }.
@@ -226,6 +232,7 @@ func _write_at(path: String, offset: int, data: PackedByteArray) -> void:
 
 ## Satu request HTTP. Mengembalikan [result, code, headers, body].
 func _request(url: String, headers: PackedStringArray) -> Array:
+	_ensure_http()
 	stats["requests"] += 1
 	var err: Error = _http.request(url, headers)
 	if err != OK:
