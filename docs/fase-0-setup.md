@@ -100,7 +100,7 @@ Belum ada data karena belum dijalankan di HP. Isi setelah tes:
 
 | Perangkat (model, Android versi) | Renderer aktif | FPS diam | FPS bergerak | Catatan |
 |---|---|---|---|---|
-| (isi) | (isi) | (isi) | (isi) | |
+| (model HP belum diisi) | Mobile | ~60 (stabil, laporan user) | ~60 (stabil, laporan user) | Scene kosong: sky, lantai placeholder, kamera |
 
 ## Yang sudah diverifikasi
 
