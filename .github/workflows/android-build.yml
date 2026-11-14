@@ -1,0 +1,72 @@
+name: Android Build (debug APK)
+
+# Build APK Android untuk project vel magic memakai image Godot 4.7.2 resmi
+# komunitas (barichello/godot-ci:4.7.2). Keystore yang dipakai hanya keystore
+# debug sementara yang dibuat di runner; tidak ada secret yang dipakai.
+
+on:
+  push:
+    branches:
+      - main
+      - arena/e8cd36e2-godot
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_IMAGE: barichello/godot-ci:4.7.2
+
+jobs:
+  android-debug-apk:
+    name: Export debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Godot version in image
+        run: docker run --rm "$GODOT_IMAGE" bash -c 'godot --version'
+
+      - name: Create temporary debug keystore (not stored in repo)
+        run: |
+          keytool -genkeypair -v \
+            -keystore "$RUNNER_TEMP/ci-debug.keystore" \
+            -storepass android -keypass android \
+            -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+
+      - name: Import project and export debug APK
+        run: |
+          mkdir -p build
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/project" \
+            -v "$RUNNER_TEMP/ci-debug.keystore:/ci/debug.keystore:ro" \
+            -w /project \
+            -e GODOT_ANDROID_KEYSTORE_DEBUG_PATH=/ci/debug.keystore \
+            -e GODOT_ANDROID_KEYSTORE_DEBUG_USER=androiddebugkey \
+            -e GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=android \
+            "$GODOT_IMAGE" \
+            bash -euo pipefail -c '
+              godot --headless --path /project --import
+              godot --headless --path /project --export-debug "Android" /project/build/vel-magic.apk
+            '
+
+      - name: Verify APK
+        run: |
+          ls -lh build/
+          test -s build/vel-magic.apk
+          sha256sum build/vel-magic.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vel-magic-debug-apk
+          path: build/vel-magic.apk
+          if-no-files-found: error
+          retention-days: 14

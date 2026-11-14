@@ -40,6 +40,16 @@ sesuai aturan kebijakan aset.
 
 (Di PC: klik kanan + geser untuk melihat, WASD untuk bergerak, Q/E turun/naik, Shift lebih cepat.)
 
+## Build APK otomatis (GitHub Actions)
+
+Workflow: `.github/workflows/android-build.yml`. Jalan otomatis saat push ke `main` atau
+`arena/e8cd36e2-godot`, dan bisa dijalankan manual lewat tab **Actions → Android Build → Run workflow**.
+
+- Image: `barichello/godot-ci:4.7.2` (tag ini ada di Docker Hub, dipush 18 Agustus 2026).
+- Langkah: import project (`godot --headless --import`) → export debug APK
+  (`godot --headless --export-debug "Android" build/vel-magic.apk`) → upload artifact `vel-magic-debug-apk`.
+- Signing: keystore debug sementara yang dibuat di runner. Tidak ada secret dan tidak ada keystore di repo.
+
 ## Cara tes di HP Android
 
 Langkah ini dikerjakan di komputer Anda.
