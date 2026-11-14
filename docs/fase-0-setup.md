@@ -100,7 +100,7 @@ Belum ada data karena belum dijalankan di HP. Isi setelah tes:
 
 | Perangkat (model, Android versi) | Renderer aktif | FPS diam | FPS bergerak | Catatan |
 |---|---|---|---|---|
-| (model HP belum diisi) | Mobile | ~60 (stabil, laporan user) | ~60 (stabil, laporan user) | Scene kosong: sky, lantai placeholder, kamera |
+| Infinix Note 40 (MediaTek Helio G99, RAM 8 GB) | Mobile | ~60 (stabil, laporan user) | ~60 (stabil, laporan user) | Scene kosong: sky, lantai placeholder, kamera |
 
 ## Yang sudah diverifikasi
 
