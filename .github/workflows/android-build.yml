@@ -56,13 +56,14 @@ jobs:
             bash -c '
               set -x
               godot --headless --path /project --import
-              godot --headless --path /project --export-debug "Android" /project/build/vel-magic.apk
+              godot --headless --verbose --path /project --export-debug "Android" /project/build/vel-magic.apk
+              echo "godot export exit code: $?"
             ' > build/export.log 2>&1
           rc=$?
           set -e
-          cat build/export.log
+          grep -v -E "fontconfig|get_system_font_path" build/export.log > build/export-filtered.log || true
           if [ "$rc" -ne 0 ]; then
-            msg=$(tail -n 80 build/export.log | tr -d '\r' | sed -e 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            msg=$(tail -n 70 build/export-filtered.log | tr -d '\r' | sed -e 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
             echo "::error title=Godot export failed (exit $rc)::${msg}"
           fi
           exit "$rc"
