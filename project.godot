@@ -1,13 +1,13 @@
 ; Engine configuration file.
 ; Dibuat untuk Fase 0 (Setup Project & Arsitektur Dasar).
-; Target: Godot 4.7 (sesuaikan bila memakai 4.x lain), renderer Mobile.
+; Target: Godot 4.7.2 (rilis stabil terbaru), renderer Mobile.
 
 config_version=5
 
 [application]
 
-config/name="Open World Prototype"
-config/description="Prototype open-world stylized painterly, first-person, target mobile."
+config/name="vel magic"
+config/description="Prototype open-world stylized painterly, first-person, target Android."
 config/features=PackedStringArray("4.7", "Mobile")
 run/main_scene="res://scenes/World.tscn"
 
