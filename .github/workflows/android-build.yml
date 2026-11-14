@@ -44,6 +44,7 @@ jobs:
       - name: Import project and export debug APK
         run: |
           mkdir -p build
+          set +e
           docker run --rm \
             -v "$GITHUB_WORKSPACE:/project" \
             -v "$RUNNER_TEMP/ci-debug.keystore:/ci/debug.keystore:ro" \
@@ -52,10 +53,28 @@ jobs:
             -e GODOT_ANDROID_KEYSTORE_DEBUG_USER=androiddebugkey \
             -e GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=android \
             "$GODOT_IMAGE" \
-            bash -euo pipefail -c '
+            bash -c '
+              set -x
               godot --headless --path /project --import
               godot --headless --path /project --export-debug "Android" /project/build/vel-magic.apk
-            '
+            ' > build/export.log 2>&1
+          rc=$?
+          set -e
+          cat build/export.log
+          if [ "$rc" -ne 0 ]; then
+            msg=$(tail -n 80 build/export.log | tr -d '\r' | sed -e 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=Godot export failed (exit $rc)::${msg}"
+          fi
+          exit "$rc"
+
+      - name: Upload build logs (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vel-magic-build-logs
+          path: build/*.log
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Verify APK
         run: |
