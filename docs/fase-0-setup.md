@@ -123,3 +123,36 @@ Belum ada data karena belum dijalankan di HP. Isi setelah tes:
 
 1. Fallback Compatibility untuk HP lama: cukup lewat setting build (sesuai jawaban prompt tambahan, renderer dipilih di build settings, bukan saat runtime).
 2. Keystore debug: tetap sementara per run, atau dibuat permanen lewat GitHub Secret supaya APK bisa saling menimpa?
+
+## Fase 0.5 — Launcher & sistem update (GitHub Releases)
+
+Base APK hanya berisi kode. Konten dikemas sebagai `.pck` dan diunduh saat runtime.
+
+**Alur app:** `Launcher.tscn` (scene utama) → ambil `manifest.json` → bandingkan SHA256 dengan paket terpasang → unduh paket berubah (chunk 4 MB dengan `Range`, lanjut dari `.part`) → validasi SHA256 → `load_resource_pack` → hapus versi lama setelah versi baru termuat → pindah ke dunia. Jika jaringan gagal, tombol "Coba lagi" dan "Main offline" (memakai paket terpasang).
+
+**Komponen:**
+- `scripts/update/update_logic.gd` — validasi manifest, diff paket, format MB (logika murni, teruji).
+- `scripts/update/update_manager.gd` — autoload `UpdateManager`.
+- `scripts/launcher/launcher.gd`, `scenes/Launcher.tscn` — splash, tips, progress, konfirmasi jika unduhan > 50 MB, cek ruang penyimpanan.
+- `content/packs.json` — daftar paket (sumber). `tools/build_content.py` — ekspor `.pck` + `manifest.json`.
+- Preset `Content World` di `export_presets.cfg` → `build/packs/world.pck`. Preset `Android` mengecualikan `World.tscn`, `tests/*`, `tools/*`, `content/*`, `docs/*`.
+
+**URL manifest:** `https://github.com/KyokoApp/godot/releases/download/content-latest/manifest.json`
+
+**CI:** `.github/workflows/content-packs.yml`
+- Job `update-tests`: menjalankan `tests/update_tests.gd` headless terhadap `tests/range_server.py` (127.0.0.1:8080). Hasil terakhir: **34 passed, 0 failed** (run `43650888018`).
+- Job `publish-content`: hanya jika tes lolos. Ekspor paket, lalu upload ke release pre-release `content-latest` (`--clobber`). Asset terakhir: `manifest.json` dan `world-0.1.0-45fc79dcb218.pck` (8.856 byte).
+
+**Catatan versi:** setiap perubahan konten wajib menaikkan `version` di `content/packs.json`. Paket dengan SHA256 sama tidak diunduh ulang.
+
+### Tes wajib di HP (dilakukan user)
+1. **Install awal:** pasang APK baru, buka app saat internet aktif. Launcher harus mengunduh `world` lalu masuk ke dunia.
+2. **Update satu paket:** naikkan versi `world` di `content/packs.json`, push, tunggu job `publish-content`. Buka app lagi, progress harus menampilkan unduhan dan dunia termuat dengan versi baru.
+3. **Putus koneksi di tengah download:** matikan Wi-Fi/data saat progress berjalan. Harus muncul pesan gagal dengan tombol "Coba lagi". Nyalakan koneksi lalu tekan "Coba lagi": unduhan harus lanjut, bukan mulai dari nol. Opsional: tekan "Main offline" dan pastikan dunia terpasang tetap bisa dibuka.
+
+### Status verifikasi Fase 0.5
+- Parser GDScript (tree-sitter): 0 error.
+- `lint_project.py`: 0 error, 0 warning.
+- Tes headless di CI: 34/34 lolos (diff, install, resume, hash rusak, offline, manifest hilang).
+- Export APK (`43650888022`) dan publish release: sukses.
+- Belum diuji di HP.
