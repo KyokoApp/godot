@@ -54,10 +54,13 @@ jobs:
             -e GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=android \
             "$GODOT_IMAGE" \
             bash -c '
-              set -x
+              set -o pipefail
               godot --headless --path /project --import
+              echo "godot import exit code: $?"
               godot --headless --verbose --path /project --export-debug "Android" /project/build/vel-magic.apk
-              echo "godot export exit code: $?"
+              rc=$?
+              echo "godot export exit code: $rc"
+              exit $rc
             ' > build/export.log 2>&1
           rc=$?
           set -e
