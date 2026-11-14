@@ -1,0 +1,27 @@
+; Engine configuration file.
+; Dibuat untuk Fase 0 (Setup Project & Arsitektur Dasar).
+; Target: Godot 4.7 (sesuaikan bila memakai 4.x lain), renderer Mobile.
+
+config_version=5
+
+[application]
+
+config/name="Open World Prototype"
+config/description="Prototype open-world stylized painterly, first-person, target mobile."
+config/features=PackedStringArray("4.7", "Mobile")
+run/main_scene="res://scenes/World.tscn"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/handheld/orientation=0
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[rendering]
+
+; Prompt: Mobile (bukan Forward+) agar ringan di HP.
+renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="mobile"
+textures/vram_compression/import_etc2_astc=true

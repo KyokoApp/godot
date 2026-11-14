@@ -1,0 +1,17 @@
+# Cache dan data editor Godot (dibuat otomatis)
+.godot/
+
+# Hasil build / export (jangan di-commit)
+*.apk
+*.aab
+*.ipa
+*.pck
+*.keystore
+*.jks
+export_credentials.cfg
+/build/
+/export/
+
+# Cache Python (skill/tool)
+__pycache__/
+*.pyc
