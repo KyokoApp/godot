@@ -14,6 +14,8 @@ var _serve_dir: String
 
 
 func _initialize() -> void:
+	# Tunggu satu frame: root window (SceneTree) belum berjalan saat _initialize.
+	await process_frame
 	_serve_dir = ProjectSettings.globalize_path("res://build/test-serve")  # lint:ignore res_path
 	DirAccess.make_dir_recursive_absolute(_serve_dir + "/packs")
 	DirAccess.make_dir_recursive_absolute(_serve_dir + "/src")
@@ -31,6 +33,7 @@ func _run_all() -> void:
 
 	_um = UpdateManagerScript.new()
 	root.add_child(_um)
+	print("um inside tree: %s" % str(_um.is_inside_tree()))
 	_um.manifest_url = BASE_URL + "/manifest.json"
 	_reset_user_content()
 
