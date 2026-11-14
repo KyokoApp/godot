@@ -1,0 +1,11 @@
+{
+  "manifest_version": 1,
+  "packs": [
+    {
+      "name": "world",
+      "version": "0.1.0",
+      "preset": "Content World",
+      "description": "Dunia Fase 0: WorldEnvironment, sky, lantai placeholder, kamera preview."
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 ; Engine configuration file.
-; Dibuat untuk Fase 0 (Setup Project & Arsitektur Dasar).
+; Fase 0 (setup) + Fase 0.5 (launcher & update konten).
 ; Target: Godot 4.7.2 (rilis stabil terbaru), renderer Mobile.
 
 config_version=5
@@ -9,7 +9,11 @@ config_version=5
 config/name="vel magic"
 config/description="Prototype open-world stylized painterly, first-person, target Android."
 config/features=PackedStringArray("4.7", "Mobile")
-run/main_scene="res://scenes/World.tscn"
+run/main_scene="res://scenes/Launcher.tscn"
+
+[autoload]
+
+UpdateManager="*res://scripts/update/update_manager.gd"
 
 [display]
 

@@ -1,0 +1,120 @@
+name: Content Packs & Update Tests
+
+# 1) Tes headless sistem update (diff, resume, validasi hash, offline) terhadap server range lokal.
+# 2) Jika lolos: ekspor paket konten (.pck) dan manifest.json, lalu publish ke GitHub Release "content-latest".
+#    App mengambil manifest dari: https://github.com/KyokoApp/godot/releases/download/content-latest/manifest.json
+
+on:
+  push:
+    branches:
+      - arena/e8cd36e2-godot
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: content-packs-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_IMAGE: barichello/godot-ci:4.7.2
+  SERVE_DIR: build/test-serve
+
+jobs:
+  update-tests:
+    name: Update system tests (headless)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare test server folder
+        run: mkdir -p "$SERVE_DIR"
+
+      - name: Start HTTP range server (127.0.0.1:8080)
+        run: |
+          nohup python3 tests/range_server.py --port 8080 --dir "$GITHUB_WORKSPACE/$SERVE_DIR" > range-server.log 2>&1 &
+          sleep 2
+          cat range-server.log
+
+      - name: Pull Godot image
+        run: docker pull "$GODOT_IMAGE"
+
+      - name: Run update tests in Godot (headless)
+        run: |
+          set +e
+          docker run --rm --network host \
+            -v "$GITHUB_WORKSPACE:/project" \
+            -w /project \
+            "$GODOT_IMAGE" \
+            bash -c '
+              godot --headless --path /project --import
+              godot --headless --path /project -s res://tests/update_tests.gd
+            ' > update-tests.log 2>&1
+          rc=$?
+          set -e
+          grep -E "^(ok|FAIL|RESULT)" update-tests.log || true
+          grep -E "SCRIPT ERROR|Parse Error|Compile Error" -A2 update-tests.log | head -60 || true
+          result_line=$(grep RESULT update-tests.log | tail -n 1 || true)
+          echo "::notice title=Update tests::${result_line:-no result}"
+          echo "godot test exit code: $rc"
+          exit "$rc"
+
+      - name: Show range server log
+        if: always()
+        run: tail -n 80 range-server.log || true
+
+      - name: Stop range server
+        if: always()
+        run: pkill -f range_server.py || true
+
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: update-test-logs
+          path: |
+            update-tests.log
+            range-server.log
+          if-no-files-found: warn
+          retention-days: 7
+
+  publish-content:
+    name: Export content packs and publish release
+    needs: update-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Pull Godot image
+        run: docker pull "$GODOT_IMAGE"
+
+      - name: Export packs and build manifest
+        run: |
+          python3 tools/build_content.py \
+            --docker-image "$GODOT_IMAGE" \
+            --out build/packs \
+            --base-url "https://github.com/${GITHUB_REPOSITORY}/releases/download/content-latest/"
+          ls -lh build/packs
+
+      - name: Publish to GitHub Release (content-latest)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view content-latest --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release create content-latest --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" --prerelease \
+              --title "Content packs (latest)" \
+              --notes "Paket konten untuk update in-app. Dibuat otomatis oleh CI dari commit ${GITHUB_SHA}."
+          fi
+          gh release upload content-latest build/packs/* --repo "$GITHUB_REPOSITORY" --clobber
+
+      - name: Verify manifest is publicly reachable
+        run: |
+          url="https://github.com/${GITHUB_REPOSITORY}/releases/download/content-latest/manifest.json"
+          curl -sfL "$url" -o manifest-check.json
+          python3 -c "import json; m=json.load(open('manifest-check.json')); print('manifest packs:', [(p['name'], p['version'], p['size']) for p in m['packs']])"
