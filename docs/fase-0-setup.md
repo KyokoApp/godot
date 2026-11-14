@@ -40,15 +40,37 @@ sesuai aturan kebijakan aset.
 
 (Di PC: klik kanan + geser untuk melihat, WASD untuk bergerak, Q/E turun/naik, Shift lebih cepat.)
 
-## Build APK otomatis (GitHub Actions)
+## Build APK otomatis (GitHub Actions) — BERHASIL
 
 Workflow: `.github/workflows/android-build.yml`. Jalan otomatis saat push ke `main` atau
 `arena/e8cd36e2-godot`, dan bisa dijalankan manual lewat tab **Actions → Android Build → Run workflow**.
 
-- Image: `barichello/godot-ci:4.7.2` (tag ini ada di Docker Hub, dipush 18 Agustus 2026).
-- Langkah: import project (`godot --headless --import`) → export debug APK
-  (`godot --headless --export-debug "Android" build/vel-magic.apk`) → upload artifact `vel-magic-debug-apk`.
-- Signing: keystore debug sementara yang dibuat di runner. Tidak ada secret dan tidak ada keystore di repo.
+- Run pertama yang sukses: https://github.com/KyokoApp/godot/actions/runs/43649591698
+- Image: `barichello/godot-ci:4.7.2` (Godot 4.7.2.stable.official).
+- Langkah: import project → export debug APK → verifikasi APK → ringkasan manifest → upload artifact.
+- Artifact: **`vel-magic-debug-apk`** (berisi `vel-magic.apk`, 28,26 MB). Unduh dari halaman run di atas, bagian *Artifacts*.
+
+Ringkasan APK dari manifest:
+
+| Item | Nilai |
+|---|---|
+| Package | `vel.magic` |
+| Nama aplikasi | `vel magic` |
+| Versi | 0.1.0 (code 1) |
+| Min SDK | 24 (Android 7.0) |
+| Target SDK | 36 (Android 16) |
+| Izin | `INTERNET`, `ACCESS_NETWORK_STATE` |
+| ABI | arm64-v8a |
+
+Catatan penting:
+
+- **Signing:** keystore debug dibuat sementara di setiap run. Artinya APK dari run yang berbeda
+  punya tanda tangan berbeda. Jika APK baru tidak bisa menimpa APK lama di HP, uninstall dulu
+  versi lama. Opsi permanen: simpan keystore debug di GitHub Secret (saya bisa siapkan bila Anda mau).
+- **Min/Target SDK:** di build non-Gradle, Godot tidak mengizinkan override SDK di preset.
+  Nilai 36 di atas berasal dari default template Godot 4.7.2. Override manual perlu *Use Gradle Build*.
+- Pesan "Could not find version of build tools that matches Target SDK, using 33.0.2" adalah
+  peringatan dan tidak menggagalkan build.
 
 ## Cara tes di HP Android
 
@@ -86,7 +108,8 @@ Belum ada data karena belum dijalankan di HP. Isi setelah tes:
 - Linter statis `lint_project.py` dari skill haxqer (tanpa Godot): **0 error, 0 warning**.
   Linter memeriksa `res://` path, referensi `ext_resource`, dan konfigurasi project.
 - Versi 4.7.2 dicek dari daftar rilis resmi di GitHub (`godotengine/godot`).
-- **Belum diverifikasi:** scene termuat di editor, tampilan, FPS, dan export APK.
+- **APK berhasil di-export di CI** (run 43649591698). Manifest sudah dibaca dan sesuai.
+- **Belum diverifikasi:** tampilan di HP, FPS, dan perilaku scene saat berjalan.
 
 ## Aset yang masih dibutuhkan
 
@@ -98,4 +121,5 @@ Belum ada data karena belum dijalankan di HP. Isi setelah tes:
 
 ## Pertanyaan yang masih terbuka
 
-1. Fallback Compatibility untuk HP lama: cukup lewat setting build, atau perlu pemilihan renderer saat runtime?
+1. Fallback Compatibility untuk HP lama: cukup lewat setting build (sesuai jawaban prompt tambahan, renderer dipilih di build settings, bukan saat runtime).
+2. Keystore debug: tetap sementara per run, atau dibuat permanen lewat GitHub Secret supaya APK bisa saling menimpa?
