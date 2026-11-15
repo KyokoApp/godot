@@ -15,3 +15,6 @@ export_credentials.cfg
 # Cache Python (skill/tool)
 __pycache__/
 *.pyc
+
+# Addon pihak ketiga (dipasang lewat tools/fetch_terrain3d.py, tidak di-commit)
+/addons/terrain_3d/

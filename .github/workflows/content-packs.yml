@@ -95,6 +95,9 @@ jobs:
       - name: Pull Godot image
         run: docker pull "$GODOT_IMAGE"
 
+      - name: Pasang addon Terrain3D (versi terkunci + SHA256)
+        run: python3 tools/fetch_terrain3d.py
+
       - name: Export packs and build manifest
         run: |
           python3 tools/build_content.py \

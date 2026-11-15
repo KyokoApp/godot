@@ -30,6 +30,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Pasang addon Terrain3D (versi terkunci + SHA256)
+        run: python3 tools/fetch_terrain3d.py
+
       - name: Show Godot version in image
         run: docker run --rm "$GODOT_IMAGE" bash -c 'godot --version'
 
