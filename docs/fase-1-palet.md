@@ -27,3 +27,23 @@ Sebaiknya ambil juga sekali di sore hari, karena warna in-game berubah sesuai ja
 ## Catatan batas
 - Warna screenshot sudah terkena post-processing game (tone mapping, bloom). Angka ini adalah warna tampilan, bukan warna albedo asli. Itu tetap yang dibutuhkan untuk meniru tampilan.
 - Tidak ada aset dari game (tekstur, model) yang diambil. Hanya warna yang diukur.
+
+## Hasil ukur #1 (2 screenshot yang dikirim user, perkiraan awal)
+Gambar sumber tidak disalin ke repo. Angka di bawah dari potongan area tertentu (karakter dan UI dikecualikan), 5 warna dominan per area.
+
+**Foto A: adegan siang/sore, tepi laut dan rumput.** Ini acuan paling relevan untuk siang hari.
+| Area | Warna dominan (persentase) |
+|------|----------------------------|
+| Langit dekat matahari | `#fdebb1` (25%), `#f4dcad` (24%), `#dac7aa` (22%), `#fefaae` (18%) |
+| Laut | `#70959c` (29%), `#5d848e` (22%), `#87a5a5` (21%), `#a3b9af` (17%) |
+| Rumput depan | `#8dc032` (34%), `#a0d03b` (22%), `#b5d83f` (18%), `#66962b` (15%) |
+| Batu/tebing | `#628b86` (30%), `#42616b` (22%), `#96ad7b` (20%) |
+
+**Foto B: adegan malam, tidak mewakili siang.** Dipakai hanya untuk referensi warna malam. Ada filter biru dan kemungkinan diambil dari layar, jadi angkanya belum bisa dipercaya penuh.
+| Area | Warna dominan |
+|------|---------------|
+| Langit malam | `#021a6d`, `#032076`, `#042982`, `#378acf` |
+| Rumput | `#03796d` (42%), `#066c7d`, `#073d93`, `#16919f` |
+| Bukit | `#055193`, `#0444a0`, `#023699`, `#126ec5` |
+
+**Status:** perkiraan awal. Belum final. Akurasi akan naik kalau user mengirim screenshot langsung dari HP, dengan jam in-game yang dicatat (lihat daftar di atas).
