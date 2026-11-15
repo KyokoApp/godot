@@ -156,3 +156,20 @@ Base APK hanya berisi kode. Konten dikemas sebagai `.pck` dan diunduh saat runti
 - Tes headless di CI: 34/34 lolos (diff, install, resume, hash rusak, offline, manifest hilang).
 - Export APK (`43650888022`) dan publish release: sukses.
 - Belum diuji di HP.
+
+## Fase 1 — Terrain (Terrain3D) — sedang berjalan
+
+**Keputusan:** plugin Terrain3D 1.1.0-stable (MIT), GDExtension C++. Dipilih user (opsi 3).
+
+**Pemasangan:** `python3 tools/fetch_terrain3d.py` mengunduh zip release resmi, memverifikasi SHA256 (`51b78bc7…b243`), lalu memasang ke `addons/terrain_3d/`. Folder ini di-ignore Git. Skrip ini dijalankan otomatis di CI (`android-build.yml` dan `content-packs.yml`) dan wajib dijalankan sekali di mesin lokal sebelum membuka editor.
+
+**Dukungan Android (dari dokumentasi upstream):**
+- Status eksperimental. Binary tersedia untuk arm64 dan arm32.
+- Di Terrain3DMaterial, `max_regions` harus 64–256 (128 paling luas teruji).
+- Tekstur harus PNG atau TGA, bukan DDS.
+- Project Settings → Rendering → Textures → VRAM Compression → Import ETC2 ASTC harus aktif.
+
+**Status:**
+- Build APK dengan addon (run `43661883417`): sukses. Ukuran APK 32,05 MB (sebelumnya 28,26 MB).
+- Belum ada scene terrain. Menunggu pilihan set tekstur tanah dari user (kandidat: Poly Haven dan ambientCG, keduanya CC0).
+- Belum diuji di HP.
