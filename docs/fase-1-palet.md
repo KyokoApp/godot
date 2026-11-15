@@ -47,3 +47,26 @@ Gambar sumber tidak disalin ke repo. Angka di bawah dari potongan area tertentu 
 | Bukit | `#055193`, `#0444a0`, `#023699`, `#126ec5` |
 
 **Status:** perkiraan awal. Belum final. Akurasi akan naik kalau user mengirim screenshot langsung dari HP, dengan jam in-game yang dicatat (lihat daftar di atas).
+
+## Aset dunia dari user: Stylized Nature MegaKit Standard (Quaternius)
+- **Lisensi:** CC0 1.0 (file `License_Standard.txt` di dalam zip). Bebas dipakai, termasuk komersial.
+- **Isi versi gratis:** 68 dari 116 model. Termasuk rumput (`Grass_Common_*`, `Grass_Wispy_*`), jalur batu (`RockPath_*`), dan batu. Format FBX, glTF, OBJ.
+- **Status unduhan:** zip dari Google Drive (104.088.529 byte) **rusak**. 16 file gagal CRC atau header tidak valid, termasuk `Textures/Grass.png` (tekstur rumput utama). File yang lolos CRC (`PathRocks_Diffuse.png`, `Rocks_Diffuse.png`, `Rocks_Desert_Diffuse.png`, preview) utuh. Zip tidak disimpan di repo.
+
+### Palet dari kit (perkiraan, sudah dipengaruhi cahaya di preview)
+Dari `Preview_1.jpg` (render resmi kit):
+| Area | Warna dominan |
+|------|---------------|
+| Tanah jalan (terang) | `#c7b84e`, `#cac151`, `#ddcb75` |
+| Tanah jalan (bayangan) | `#968935` |
+| Rumput depan | `#8bb602`, `#a2c806`, `#618a02` |
+| Rumput tengah | `#9ac32c`, `#bccc49` |
+
+Dari tekstur asli (warna albedo, lebih akurat):
+| Tekstur | Warna dominan |
+|---------|---------------|
+| `Rocks_Desert_Diffuse.png` (batu cokelat) | `#a76f33`, `#965f2a`, `#bf8945`, `#cd9c52` |
+| `PathRocks_Diffuse.png` (jalur batu) | `#2c371a`, `#374817`, `#4f5d39`, `#687452`, `#8c8e8c` |
+| `Rocks_Diffuse.png` (batu abu) | `#33401a`, `#3f4d28`, `#515b47`, `#606856` |
+
+**Status:** belum final. Tekstur `Grass.png` belum bisa dibaca karena rusak, jadi warna rumput masih berasal dari preview. Perlu file zip yang utuh untuk pengukuran albedo rumput.
