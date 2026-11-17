@@ -93,3 +93,12 @@ Tanah harus sedikit lebih redup dan kurang jenuh dibanding rumput, supaya helai 
 - Area dekat rumput: campuran dengan `#589808` tipis, sekitar 10–15%
 
 Angka ini belum diuji di layar. Validasinya dilakukan dengan screenshot di HP.
+
+## Aset terpasang (tahap 1: rumput + satu pohon)
+Dari Stylized Nature MegaKit Standard (Quaternius, CC0 1.0). Lisensi: `assets/LICENSE_stylized_nature_megakit.txt`.
+- **Rumput:** `assets/grass/Grass_Common_Short.gltf` (+ `.bin`, `Grass.png`). Tekstur rumput kit, disalin dari `glTF/Grass.png`.
+- **Pohon:** `assets/trees/CommonTree_1.gltf` (+ `.bin`, tiga tekstur: bark, bark normal, daun). Sekitar 8,7 MB, sebagian besar dari tekstur bark.
+
+Belum dipasang ke scene. Penempatan (rumput di terrain, pohon sebagai objek) dikerjakan setelah terrain siap. Pohon lain dan batu menunggu keputusan user.
+
+Catatan: `.import` dibuat oleh Godot saat import pertama dan tidak di-commit. CI (`--import`) akan membuatnya di runner.
