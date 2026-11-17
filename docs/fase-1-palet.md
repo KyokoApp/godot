@@ -70,3 +70,26 @@ Dari tekstur asli (warna albedo, lebih akurat):
 | `Rocks_Diffuse.png` (batu abu) | `#33401a`, `#3f4d28`, `#515b47`, `#606856` |
 
 **Status:** belum final. Tekstur `Grass.png` belum bisa dibaca karena rusak, jadi warna rumput masih berasal dari preview. Perlu file zip yang utuh untuk pengukuran albedo rumput.
+
+## Update: zip kit versi utuh (Drive ID berbeda: `1tW_D9…`)
+- **Integritas:** MD5 cocok dengan checksum Drive (`a49a8b80d12f72b2d7f3082fba566c8d`). Semua 454 file lolos CRC. Zip sebelumnya rusak karena salah unduh, sedangkan file ini utuh.
+- **Lisensi:** CC0 1.0 (`License_Standard.txt`).
+- Zip tidak disimpan di repo.
+
+### Palet dari tekstur asli kit
+**`Textures/Grass.png`** (512×512, alpha penuh; latar putih ~78% diabaikan). Warna dari piksel non-putih:
+| Warna | Persentase | Peran |
+|-------|-----------|-------|
+| `#589808`, `#58a808`, `#68a808`, `#087808` | ~20% | hijau rumput utama |
+| `#c85808`, `#a85808`, `#b85808` | ~25% | cokelat-oranye (ujung rumput kering) |
+| `#a88808`, `#b8a808`, `#b89808` | ~17% | kuning-zaitun |
+
+**`Textures/Rocks_Desert_Diffuse.png`** (batu cokelat): `#a76f33`, `#965f2a`, `#bf8945`, `#cd9c52`.
+
+### Arah warna tanah (usulan, belum divalidasi di HP)
+Tanah harus sedikit lebih redup dan kurang jenuh dibanding rumput, supaya helai rumput tetap terbaca di atasnya. Usulan awal, dipilih dari rentang di atas:
+- Tanah dasar (olive): sekitar `#7a7a2e` sampai `#8f8a3e`
+- Tanah jalan/cokelat: sekitar `#a88a4a` sampai `#b08c50`, diambil dari rentang batu cokelat yang diredupkan
+- Area dekat rumput: campuran dengan `#589808` tipis, sekitar 10–15%
+
+Angka ini belum diuji di layar. Validasinya dilakukan dengan screenshot di HP.
