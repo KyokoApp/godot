@@ -5,7 +5,8 @@ Clever formations.*). Diimpor ke repo ini sesuai permintaan, **tanpa** merge ke 
 
 | Item | Nilai |
 | --- | --- |
-| Asal | `KyokoApp/animestudio` → `games/little-legions/` (commit terakhir repo tersebut) |
+| Asal | `KyokoApp/animestudio` → `games/little-legions/` |
+| Posisi di repo ini | `game/` (dulu `games/little-legions/`) — game utama repo ini |
 | Engine | Unity WebGL (`Build/WebBuild.*.unityweb`) |
 | Ukuran | ± 98 MB (wasm 57 MB, data 42 MB) — sudah terkompresi gzip di dalam |
 | Threads | tidak ada (tidak butuh `SharedArrayBuffer`) |
@@ -14,29 +15,29 @@ Clever formations.*). Diimpor ke repo ini sesuai permintaan, **tanpa** merge ke 
 ## Struktur
 
 ```
-games/little-legions/
+game/
 ├── index.html                     # player asli (hanya blok heartbeat yang dihapus)
 ├── Build/
 │   ├── WebBuild.loader.js
 │   ├── WebBuild.framework.js.unityweb
 │   ├── WebBuild.wasm.unityweb     # 57 MB
 │   └── WebBuild.data.unityweb     # 42 MB
-├── TemplateData/Tiny5-Regular.ttf
-├── server.js                      # server statis + /api/health (Node 22, tanpa dependency)
-└── package.json
+└── TemplateData/Tiny5-Regular.ttf
 ```
+
+Server-nya ada di root repo (`server/`), bukan di sini.
 
 ## Jalanin
 
 ```bash
-cd games/little-legions
-npm start                 # http://localhost:8090
+# dari root repo
+npm start                 # http://localhost:8080
 ```
 
-Atau pakai server Node biasa:
+Atau tanpa Node:
 
 ```bash
-npx serve -l 8090 .
+npx serve -l 8080 game
 ```
 
 ## Perubahan yang dilakukan saat impor
@@ -50,8 +51,7 @@ npx serve -l 8090 .
      hitung pemain online).
 2. Tag `<script defer src="https://static.itch.io/htmlgame.js">` ditinggal apa adanya.
    Kalau nanti tidak dipublikasikan ke itch.io, boleh dihapus supaya nol request pihak ketiga.
-3. `server.js` + `package.json` ditambahkan supaya bisa jalan tanpa dependency, sama
-   seperti folder `server/` di root repo.
+3. Server dipindah ke `server/` di root repo (satu port untuk game + health check).
 
 ## Deploy
 
@@ -59,17 +59,18 @@ Opsi termudah — satu port, game + API:
 
 ```bash
 # lokal / VPS
-cd games/little-legions && PORT=8090 node server.js
+npm start                          # port 8080
+PORT=9000 npm start                # port lain
 ```
 
-Untuk VPS produksi, tambahkan blok nginx (lihat `deploy/nginx.conf` sebagai contoh)
-yang mem-proxy `location /` ke `127.0.0.1:8090`. Karena `.unityweb` sudah
+Untuk VPS produksi, tambahkan blok nginx (lihat `deploy/nginx.conf`)
+yang mem-proxy `location /` ke `127.0.0.1:8080`. Karena `.unityweb` sudah
 terkompresi, **jangan** aktifkan `gzip`/`brotli` untuk path `/Build/` — akan
 memakan CPU tanpa manfaat. Contoh:
 
 ```nginx
 location /Build/ {
-    proxy_pass http://127.0.0.1:8090;
+    proxy_pass http://127.0.0.1:8080;
     gzip off;
     expires 1y;
     add_header Cache-Control "public, immutable";
@@ -83,7 +84,7 @@ build-nya membesar atau repo terasa berat, pindahkan `Build/*.unityweb` ke Git L
 
 ```bash
 git lfs install
-git lfs track "games/**/Build/*.unityweb"
+git lfs track "game/Build/*.unityweb"
 ```
 
 Hosting alternatif untuk aset besar: object storage / CDN, lalu ubah `dataUrl`,

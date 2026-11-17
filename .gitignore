@@ -1,6 +1,4 @@
 node_modules/
-dist/
-game/dist/
 *.log
 .data/
-!deploy/
+labs/sky-runner-game/dist/

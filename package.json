@@ -1,0 +1,12 @@
+{
+  "name": "little-legions",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Hosting build Unity WebGL Little Legions + API kecil. Node 22, tanpa dependency.",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  }
+}
