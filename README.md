@@ -5,12 +5,17 @@ langsung jalan, backend API yang nyimpen skor, dan skrip deploy ke VPS supaya na
 tinggal ganti isi game-nya, bukan bikin pipeline dari nol.
 
 ```
-game/     # game Phaser 3 + Vite (dev server :5173, build ke game/dist)
-server/   # backend Node 22 (http + node:sqlite, tanpa dependency) :8080
-deploy/   # Dockerfile, compose, nginx, systemd, script deploy VPS
-scripts/  # helper lokal (cek environment, build, smoke test)
-docs/     # panduan arsitektur, deploy VPS, dan migrasi ke Godot Engine
+game/       # Sky Runner — Phaser 3 + Vite (dev server :5173, build ke game/dist)
+server/     # backend Node 22 (http + node:sqlite, tanpa dependency) :8080
+games/      # game siap-pakai lain, tiap folder punya server.js sendiri
+  little-legions/   # build Unity WebGL resmi (Greenpine Studio) :8090
+deploy/     # Dockerfile, compose, nginx, systemd, script deploy VPS
+scripts/    # helper lokal (cek environment, build, smoke test)
+docs/       # panduan arsitektur, deploy VPS, dan migrasi ke Godot Engine
+godot/      # project Godot 4 minimal (jalur migrasi)
 ```
+
+Port: **5173** Sky Runner (dev), **8080** API/papan skor, **8090** Little Legions.
 
 ## 1. Jalanin lokal
 
@@ -43,6 +48,16 @@ cd ../server && SERVE_STATIC=1 PORT=8080 npm start
 
 Validasi: nama dibersihkan (maks 14 char), skor 0–10 juta, level 1–999, rate limit
 30 request/menit/IP. Data disimpan di SQLite (`.data/skyrunner.db`, WAL mode).
+
+## 2b. Little Legions (Unity WebGL)
+
+```bash
+cd games/little-legions && npm start      # http://localhost:8090
+```
+
+Build Unity WebGL dari repo `KyokoApp/animestudio` (impor apa adanya, satu blok
+heartbeat berisi token GitHub hardcoded sudah dibuang). Detail, catatan lisensi, dan
+contoh nginx: `games/little-legions/README.md`.
 
 ## 3. Deploy ke VPS
 
