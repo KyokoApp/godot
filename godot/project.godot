@@ -1,0 +1,30 @@
+; Engine configuration file untuk Godot 4.x
+; Titik awal kalau nanti mau migrasi dari Phaser ke Godot Engine.
+; Buka folder ini di Godot 4.2+, lalu export ke Web (lihat docs/GODOT-PIPELINE.md).
+
+config_version=5
+
+[application]
+
+config/name="Sky Runner"
+config/description="Starter project Godot 4 — terhubung ke backend Node di /api"
+run/main_scene="res://scenes/Main.tscn"
+config/features=PackedStringArray("4.2", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=960
+window/size/viewport_height=540
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=0
+
+[network]
+
+limits/debugger_stdout/log_lines=200

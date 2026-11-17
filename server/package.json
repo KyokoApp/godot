@@ -1,0 +1,12 @@
+{
+  "name": "godot-server",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Backend Sky Runner: Node 22 built-in http + node:sqlite, tanpa dependency.",
+  "engines": { "node": ">=22.5.0" },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  }
+}
