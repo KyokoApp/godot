@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Sky Legion Live — arena TikTok</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #0a0d16; }
+      body {
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        color: #e8eefc;
+      }
+      #app { position: fixed; inset: 0; display: grid; place-items: center; }
+      #game canvas { display: block; }
+      /* mode overlay buat OBS: latar transparan */
+      body.overlay { background: transparent; }
+      #status {
+        position: fixed; left: 10px; bottom: 8px; font: 11px ui-monospace, monospace;
+        color: #66739a; letter-spacing: .04em; pointer-events: none; user-select: none;
+      }
+      body.overlay #status { display: none; }
+      #status.on { color: #49d98b; }
+      #status.off { color: #ff6b7a; }
+    </style>
+  </head>
+  <body>
+    <div id="app"><div id="game"></div></div>
+    <div id="status">menyambung…</div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

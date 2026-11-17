@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Uji cepat server Little Legions: health, index, loader, potongan wasm.
+# Uji cepat Sky Legion Live: health, halaman game, join lewat chat, WebSocket.
 # Pakai: ./scripts/smoke-test.sh [BASE_URL]   (default http://127.0.0.1:8080)
 set -Eeuo pipefail
 BASE="${1:-http://127.0.0.1:8080}"
@@ -7,33 +7,38 @@ say() { printf '\033[1;36m▶ %s\033[0m\n' "$*"; }
 fail() { printf '\033[1;31m  GAGAL: %s\033[0m\n' "$*"; exit 1; }
 
 say "health"
-curl -fsS "$BASE/api/health" || fail "health tidak merespons"
+curl -fsS "$BASE/api/health" || fail "server tidak merespons"
 echo
-curl -fsS "$BASE/api/health" | grep -q '"gameReady":true' || fail "build game tidak terdeteksi (gameReady=false)"
 
 say "halaman game"
 title=$(curl -fsS "$BASE/" | grep -o '<title>[^<]*</title>' || true)
-[ "$title" = "<title>Little Legions</title>" ] || fail "index.html tidak sesuai: $title"
+[ "$title" = "<title>Sky Legion Live — arena TikTok</title>" ] || fail "index.html tidak sesuai: $title"
 echo "  $title"
 
-say "unity loader"
-curl -fsS -o /dev/null -w "  loader %{http_code} %{content_type}\n" "$BASE/Build/WebBuild.loader.js"
+say "komentar join -> petarung baru"
+before=$(curl -fsS "$BASE/api/state" | grep -o '"fighters":[0-9]*' | head -1 | cut -d: -f2)
+curl -fsS -X POST "$BASE/api/mock/chat" -H 'Content-Type: application/json' \
+  -d '{"user":"smoke","text":"join"}' >/dev/null
+after=$(curl -fsS "$BASE/api/state" | grep -o '"fighters":[0-9]*' | head -1 | cut -d: -f2)
+[ "$after" -gt "$before" ] 2>/dev/null || fail "join tidak menambah petarung ($before -> $after)"
+echo "  petarung: $before -> $after"
 
-say "wasm (harus utuh, byte pertama \\0asm)"
-first=$(curl -fsS -r 0-3 "$BASE/Build/WebBuild.wasm.unityweb" | head -c 4 | od -An -tx1 | tr -d ' \n')
-[ "$first" = "0061736d" ] || fail "wasm tidak utuh (awal: $first)"
-echo "  header wasm ok ($first)"
+say "ganti senjata"
+curl -fsS -X POST "$BASE/api/mock/chat" -H 'Content-Type: application/json' \
+  -d '{"user":"smoke","text":"tombak"}' | grep -q '"weapon":"tombak"' || fail "ganti senjata gagal"
+echo "  ok"
 
-say "range request (206)"
-code=$(curl -s -o /dev/null -w '%{http_code}' -r 0-1023 "$BASE/Build/WebBuild.wasm.unityweb")
-[ "$code" = "206" ] || fail "range tidak didukung (dapat $code)"
-echo "  ok (206)"
+say "websocket mengirim tick"
+node -e "
+const WebSocket = require('ws');
+const ws = new WebSocket('${BASE}'.replace('http','ws') + '/ws');
+let ticks = 0, hits = 0;
+ws.on('message', (d) => { const m = JSON.parse(d); if (m.type==='tick') ticks++; if (m.type==='hit') hits++; });
+ws.on('error', (e) => { console.error(e.message); process.exit(1); });
+setTimeout(() => { ws.close(); if (ticks < 3) { console.error('tick terlalu sedikit: ' + ticks); process.exit(1); } console.log('  tick ' + ticks + ', hit ' + hits); process.exit(0); }, 3000);
+" || fail "websocket tidak jalan"
 
-say "tidak ada kredensial bocor di html"
-if curl -fsS "$BASE/" | grep -qE 'ghp_|GIST_ID'; then fail "masih ada token/gist di index.html"; fi
-echo "  bersih"
-
-say "404 untuk endpoint API tak dikenal"
+say "404 untuk endpoint tak dikenal"
 code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/api/nope")
 [ "$code" = "404" ] || fail "dapat $code"
 echo "  ok (404)"

@@ -1,49 +1,45 @@
 /**
- * Server Little Legions — satu proses, satu port: menyajikan build Unity WebGL
- * di ../game plus API kecil. Node 22 murni, tanpa dependency.
+ * Sky Legion Live — server TikTok Live battle arena.
+ * Satu proses: WebSocket (sinkron state) + HTTP statis (game) + REST ringan.
  *
- *   PORT=8080 node server/index.js       -> http://localhost:8080
- *   GAME_DIR=/path/ke/build node ...     -> pakai build lain
+ *   npm start                     -> http://localhost:8080  (mode simulasi)
+ *   TIKTOK_USER=@nama npm start    -> sambung ke live TikTok asli
+ *   TIKTOK_SIGN_KEY=xxx npm start  -> kalau TikTok minta API key Euler Stream
  */
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
 import { extname, join, normalize, resolve, dirname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { WebSocketServer } from 'ws';
+import { Arena } from './arena.js';
+import { connectTikTok, startMockChat } from './tiktok.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
-const GAME_DIR = resolve(process.env.GAME_DIR || join(ROOT, 'game'));
+const GAME_DIR = resolve(process.env.GAME_DIR || join(ROOT, 'dist'));
 const PORT = Number(process.env.PORT || 8080);
 const HOST = process.env.HOST || '0.0.0.0';
-const VERSION = '0.1.0';
+const TIKTOK_USER = (process.env.TIKTOK_USER || '').trim();
+const MOCK = process.env.MOCK === '1' || !TIKTOK_USER;
 
-/* File Unity WebGL (.unityweb) SUDAH terkompresi gzip/brotli di dalamnya.
-   Kirim apa adanya — jangan tambah Content-Encoding, jangan aktifkan gzip/brotli
-   untuk folder /Build/ (CPU terbuang, ukuran tidak berkurang). */
+const arena = new Arena();
+arena.start();
+
+/* ------------------------------- transport ------------------------------- */
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
-  '.mjs': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
-  '.webmanifest': 'application/manifest+json',
-  '.ttf': 'font/ttf',
-  '.woff2': 'font/woff2',
+  '.svg': 'image/svg+xml',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.webp': 'image/webp',
-  '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
-  '.unityweb': 'application/octet-stream',
-  '.wasm': 'application/wasm',
-  '.data': 'application/octet-stream',
-  '.pck': 'application/octet-stream',
-};
-
-const CORS = {
-  'Access-Control-Allow-Origin': process.env.CORS_ORIGIN || '*',
-  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.map': 'application/json; charset=utf-8',
 };
 
 function sendJson(res, status, payload) {
@@ -52,107 +48,116 @@ function sendJson(res, status, payload) {
     'Content-Type': 'application/json; charset=utf-8',
     'Content-Length': Buffer.byteLength(body),
     'Cache-Control': 'no-store',
-    ...CORS,
   });
-  res.end(body);
-}
-
-async function sendFile(res, path, req) {
-  const info = await stat(path);
-  if (!info.isFile()) throw new Error('bukan file');
-  const ext = extname(path).toLowerCase();
-  // aset build besar boleh cache panjang; html & loader tidak
-  const longCache = /\.(unityweb|wasm|data|ttf|woff2|png|jpg|webp|svg)$/i.test(path);
-  const headers = {
-    'Content-Type': MIME[ext] || 'application/octet-stream',
-    'Cache-Control': longCache ? 'public, max-age=31536000, immutable' : 'no-cache',
-    'Accept-Ranges': 'bytes',
-    ...CORS,
-  };
-
-  // Range request: browser Unity butuh ini untuk file besar / resume unduhan.
-  const range = req.headers.range;
-  const m = range && /^bytes=(\d*)-(\d*)$/.exec(range.trim());
-  if (m && (m[1] || m[2])) {
-    const size = info.size;
-    let start = m[1] ? Number(m[1]) : size - Number(m[2]);
-    let end = m[1] && m[2] ? Number(m[2]) : size - 1;
-    if (Number.isNaN(start) || Number.isNaN(end) || start > end || start >= size) {
-      res.writeHead(416, { 'Content-Range': `bytes */${size}`, ...CORS }).end();
-      return;
-    }
-    end = Math.min(end, size - 1);
-    const { createReadStream } = await import('node:fs');
-    res.writeHead(206, {
-      ...headers,
-      'Content-Range': `bytes ${start}-${end}/${size}`,
-      'Content-Length': end - start + 1,
-    });
-    createReadStream(path, { start, end }).pipe(res);
-    return;
-  }
-
-  const body = await readFile(path);
-  res.writeHead(200, { ...headers, 'Content-Length': body.length });
   res.end(body);
 }
 
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
 
-  if (req.method === 'OPTIONS') return res.writeHead(204, CORS).end();
-
   if (url.pathname === '/api/health') {
-    let gameReady = false;
-    try {
-      await stat(join(GAME_DIR, 'Build', 'WebBuild.wasm.unityweb'));
-      gameReady = true;
-    } catch {}
     return sendJson(res, 200, {
       ok: true,
-      version: VERSION,
-      game: 'little-legions',
-      gameReady,
       uptimeSec: Math.round(process.uptime()),
-      node: process.version,
+      tiktok: { mode: MOCK ? 'mock' : 'live', user: TIKTOK_USER || null },
+      arena: arena.summary(),
     });
   }
 
-  if (url.pathname.startsWith('/api/')) return sendJson(res, 404, { error: 'endpoint tidak ditemukan' });
+  if (url.pathname === '/api/state') return sendJson(res, 200, arena.summary());
+
+  if (url.pathname === '/api/mock/chat' && req.method === 'POST') {
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    let p = {};
+    try { p = JSON.parse(body || '{}'); } catch {}
+    const name = String(p.user || 'penonton').slice(0, 24);
+    const text = String(p.text || 'join');
+    const result = arena.onChat({ user: name, text, userId: name, avatar: null });
+    return sendJson(res, 200, { ok: true, result });
+  }
+
+  if (url.pathname === '/api/control' && req.method === 'POST') {
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    let p = {};
+    try { p = JSON.parse(body || '{}'); } catch {}
+    if (p.action === 'reset') arena.reset();
+    else if (p.action === 'pause') arena.running = false;
+    else if (p.action === 'resume') arena.running = true;
+    else return sendJson(res, 400, { error: 'action: reset|pause|resume' });
+    return sendJson(res, 200, { ok: true, arena: arena.summary() });
+  }
+
+  if (url.pathname.startsWith('/api/')) return sendJson(res, 404, { error: 'tidak ada' });
 
   let pathname;
-  try {
-    pathname = decodeURIComponent(url.pathname);
-  } catch {
-    return res.writeHead(400).end('bad request');
-  }
+  try { pathname = decodeURIComponent(url.pathname); } catch { return res.writeHead(400).end(); }
   if (pathname.endsWith('/')) pathname += 'index.html';
-
   const target = normalize(join(GAME_DIR, pathname));
-  if (target !== GAME_DIR && !target.startsWith(GAME_DIR + sep)) {
-    return res.writeHead(403).end('forbidden');
-  }
+  if (target !== GAME_DIR && !target.startsWith(GAME_DIR + sep)) return res.writeHead(403).end('forbidden');
 
   try {
-    await sendFile(res, target, req);
+    const info = await stat(target);
+    if (!info.isFile()) throw new Error('bukan file');
+    const ext = extname(target).toLowerCase();
+    res.writeHead(200, {
+      'Content-Type': MIME[ext] || 'application/octet-stream',
+      'Content-Length': info.size,
+      'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=3600',
+    });
+    createReadStream(target).pipe(res);
   } catch {
     try {
-      await sendFile(res, join(GAME_DIR, 'index.html'), req);
+      const body = await readFile(join(GAME_DIR, 'index.html'));
+      res.writeHead(200, { 'Content-Type': MIME['.html'], 'Content-Length': body.length, 'Cache-Control': 'no-cache' });
+      res.end(body);
     } catch {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' })
-        .end('Build Little Legions tidak ditemukan. Taruh Build/, TemplateData/, index.html di folder game/.');
+        .end('Belum di-build. Jalankan: npm run build');
     }
   }
 });
 
+const wss = new WebSocketServer({ server, path: '/ws' });
+
+wss.on('connection', (socket) => {
+  socket.isAlive = true;
+  socket.on('pong', () => { socket.isAlive = true; });
+  arena.addViewer(socket);
+  socket.on('message', (raw) => {
+    let msg;
+    try { msg = JSON.parse(raw.toString()); } catch { return; }
+    if (msg.type === 'ping') socket.send(JSON.stringify({ type: 'pong', t: msg.t }));
+  });
+  socket.on('close', () => arena.removeViewer(socket));
+  socket.on('error', () => arena.removeViewer(socket));
+});
+
+setInterval(() => {
+  for (const s of wss.clients) {
+    if (!s.isAlive) { s.terminate(); continue; }
+    s.isAlive = false;
+    try { s.ping(); } catch {}
+  }
+}, 30_000).unref();
+
+/* -------------------------------- TikTok -------------------------------- */
+const source = MOCK ? startMockChat(arena) : connectTikTok(TIKTOK_USER, arena);
+
 server.listen(PORT, HOST, () => {
-  console.log(`▶ Little Legions — http://${HOST}:${PORT}`);
-  console.log(`  folder game : ${GAME_DIR}`);
-  console.log(`  health      : http://${HOST}:${PORT}/api/health`);
+  console.log(`▶ Sky Legion Live — http://${HOST}:${PORT}`);
+  console.log(`  tampilan : http://localhost:${PORT}${MOCK ? '  (mode simulasi)' : ''}`);
+  console.log(`  overlay  : http://localhost:${PORT}/?overlay=1   (OBS, latar transparan)`);
+  console.log(`  panel    : http://localhost:${PORT}/?panel=1     (reset / jeda)`);
+  console.log(`  tiktok   : ${MOCK ? 'MOCK — set TIKTOK_USER=@akun untuk live asli' : TIKTOK_USER}`);
+  console.log(`  game lama: npm run little-legions  -> http://localhost:8090 (Little Legions)`);
 });
 
 const shutdown = () => {
-  console.log('\n⏻ mematikan server…');
+  console.log('\n⏻ mematikan…');
+  try { source?.stop?.(); } catch {}
+  arena.stop();
   server.close(() => process.exit(0));
   setTimeout(() => process.exit(0), 3000).unref();
 };

@@ -1,16 +1,19 @@
 services:
-  little-legions:
+  sky-legion-live:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
-    image: little-legions:latest
-    container_name: little-legions
+    image: sky-legion-live:latest
+    container_name: sky-legion-live
     restart: unless-stopped
     ports:
       - "127.0.0.1:8080:8080"
     environment:
       - TZ=Asia/Jakarta
-      - CORS_ORIGIN=*
+      # isi salah satu:
+      - TIKTOK_USER=${TIKTOK_USER:-}
+      - TIKTOK_SIGN_KEY=${TIKTOK_SIGN_KEY:-}
+      - MOCK=${MOCK:-0}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s

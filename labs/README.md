@@ -12,7 +12,7 @@ Produk yang dikerjakan sekarang: **Little Legions** di `game/` + `server/`.
 Menjalankan arsip (kalau perlu):
 
 ```bash
-cd labs/sky-runner-server && npm start        # :8080 (tabrakan dengan server utama, ganti PORT)
+cd labs/sky-runner-server && npm start        # set PORT=8081 kalau bentrok
 cd labs/sky-runner-game && npm install && npm run dev
 ```
 

@@ -1,12 +1,28 @@
 {
-  "name": "little-legions",
-  "private": true,
+  "name": "sky-legion-live",
   "version": "0.1.0",
-  "type": "module",
-  "description": "Hosting build Unity WebGL Little Legions + API kecil. Node 22, tanpa dependency.",
-  "engines": { "node": ">=22" },
+  "description": "Arena battle TikTok Live: penonton ketik join, karakter mereka bertarung.",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
     "start": "node server/index.js",
-    "dev": "node --watch server/index.js"
+    "live": "node server/index.js",
+    "little-legions": "node server/little-legions.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "phaser": "^3.90.0",
+    "tiktok-live-connector": "^2.5.0",
+    "ws": "^8.23.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  },
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
   }
 }

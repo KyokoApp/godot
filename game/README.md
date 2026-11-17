@@ -6,7 +6,7 @@ Clever formations.*). Diimpor ke repo ini sesuai permintaan, **tanpa** merge ke 
 | Item | Nilai |
 | --- | --- |
 | Asal | `KyokoApp/animestudio` → `games/little-legions/` |
-| Posisi di repo ini | `game/` (dulu `games/little-legions/`) — game utama repo ini |
+| Posisi di repo ini | `game/` — game lama; produk utama sekarang **Sky Legion Live** (lihat README root) |
 | Engine | Unity WebGL (`Build/WebBuild.*.unityweb`) |
 | Ukuran | ± 98 MB (wasm 57 MB, data 42 MB) — sudah terkompresi gzip di dalam |
 | Threads | tidak ada (tidak butuh `SharedArrayBuffer`) |
@@ -31,13 +31,13 @@ Server-nya ada di root repo (`server/`), bukan di sini.
 
 ```bash
 # dari root repo
-npm start                 # http://localhost:8080
+npm run little-legions    # http://localhost:8090
 ```
 
 Atau tanpa Node:
 
 ```bash
-npx serve -l 8080 game
+npx serve -l 8090 game
 ```
 
 ## Perubahan yang dilakukan saat impor
@@ -59,18 +59,18 @@ Opsi termudah — satu port, game + API:
 
 ```bash
 # lokal / VPS
-npm start                          # port 8080
-PORT=9000 npm start                # port lain
+npm run little-legions             # port 8090
+PORT=9001 npm run little-legions   # port lain
 ```
 
 Untuk VPS produksi, tambahkan blok nginx (lihat `deploy/nginx.conf`)
-yang mem-proxy `location /` ke `127.0.0.1:8080`. Karena `.unityweb` sudah
+yang mem-proxy `location /` ke `127.0.0.1:8090`. Karena `.unityweb` sudah
 terkompresi, **jangan** aktifkan `gzip`/`brotli` untuk path `/Build/` — akan
 memakan CPU tanpa manfaat. Contoh:
 
 ```nginx
 location /Build/ {
-    proxy_pass http://127.0.0.1:8080;
+    proxy_pass http://127.0.0.1:8090;
     gzip off;
     expires 1y;
     add_header Cache-Control "public, immutable";
